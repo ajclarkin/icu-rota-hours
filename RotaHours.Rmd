@@ -50,9 +50,13 @@ df_anon <- df_trimmed %>%
 View(df_anon)
 View(df_trimmed)
 
-df_trimmed %>% group_by(night1) %>% 
-  summarise(n())
 
+df_trimmed %>% group_by(night1) %>% 
+  summarise(n=n(),
+            response_rate = sum(!is.na(time_night)) / n(),
+            avg_time = mean(time_night, na.rm = TRUE)
+            ) %>% 
+  View()
 
 
 ```
