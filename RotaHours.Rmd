@@ -1,0 +1,25 @@
+---
+title: "On-call Hours in ICU"
+author: "AJ Clarkin"
+date: "08/02/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+All consultants are asked to record their on-call hours when first-on for ICU. These are used for job planning.
+
+
+```{r environment}
+
+library(tidyverse)
+library(here)
+
+
+df <- read_csv(here("data_raw/"))
+```
+
