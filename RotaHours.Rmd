@@ -18,6 +18,7 @@ All consultants are asked to record their on-call hours when first-on for ICU. T
 
 library(tidyverse)
 library(here)
+library(lubridate)
 ```
 
 
@@ -51,13 +52,21 @@ View(df_anon)
 View(df_trimmed)
 
 
-df_trimmed %>% group_by(night1) %>% 
-  summarise(n=n(),
+# Group by consultant then count the total number of nights, the proportion filled in, and the average time of those completed
+
+df_grp <-  df_trimmed %>% group_by(night1) %>% 
+  summarise(night_count = n(),
             response_rate = sum(!is.na(time_night)) / n(),
             avg_time = mean(time_night, na.rm = TRUE)
             ) %>% 
-  View()
+  mutate(hrs = as.integer(avg_time) / (60*60)) %>% 
+  arrange(desc(hrs))
 
+View(df_grp)
 
 ```
+
+Next to do
+ - Visualise by hours recorded
+ - Do something with return rate
 
