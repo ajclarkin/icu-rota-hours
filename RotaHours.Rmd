@@ -18,8 +18,42 @@ All consultants are asked to record their on-call hours when first-on for ICU. T
 
 library(tidyverse)
 library(here)
+```
 
 
-df <- read_csv(here("data_raw/"))
+```{r file-imports}
+
+# note the squiffy null value
+
+df <- read_csv(here("data_raw/sept21_feb22.csv"), na=c("\\0"))
+glimpse(df)
+
+```
+
+
+```{r}
+summary(df)
+
+df_trimmed <- df %>% 
+  mutate(
+    night1 = as_factor(night),
+  ) %>% 
+  select(rotadate, night1, time_night) %>% 
+  mutate(n1 = fct_anon(night1))
+
+
+# Anonymise the people who did nights by giving username a number.
+
+df_anon <- df_trimmed %>% 
+  select(-night1)
+
+View(df_anon)
+View(df_trimmed)
+
+df_trimmed %>% group_by(night1) %>% 
+  summarise(n())
+
+
+
 ```
 
