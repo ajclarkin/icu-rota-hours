@@ -70,3 +70,12 @@ Next to do
  - Visualise by hours recorded
  - Do something with return rate
 
+```{r visualise-hours}
+
+df_grp %>% ggplot() +
+  geom_bar(aes(x=night1, y=hrs), stat="identity")
+  
+
+mean(df_grp$hrs, na.rm = TRUE)
+```
+
