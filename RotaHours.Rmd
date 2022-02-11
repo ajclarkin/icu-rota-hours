@@ -73,7 +73,8 @@ Next to do
 ```{r visualise-hours}
 
 df_grp %>% ggplot() +
-  geom_bar(aes(x=night1, y=hrs), stat="identity")
+  geom_bar(aes(x=night1, y=hrs), stat="identity") +
+  geom_hline(yintercept = mean(df_grp$hrs, na.rm = TRUE))
   
 
 mean(df_grp$hrs, na.rm = TRUE)
