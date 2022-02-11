@@ -9,9 +9,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Background
-
-All consultants are asked to record their on-call hours when first-on for ICU. These are used for job planning.
 
 
 ```{r environment}
@@ -19,6 +16,9 @@ All consultants are asked to record their on-call hours when first-on for ICU. T
 library(tidyverse)
 library(here)
 library(lubridate)
+library(scales)
+library(knitr)
+
 ```
 
 
@@ -27,13 +27,16 @@ library(lubridate)
 # note the squiffy null value
 
 df <- read_csv(here("data_raw/sept21_feb22.csv"), na=c("\\0"))
-glimpse(df)
+# glimpse(df)
 
 ```
 
 
+
 ```{r}
-summary(df)
+# summary(df)
+
+View(df)
 
 df_trimmed <- df %>% 
   mutate(
@@ -41,15 +44,6 @@ df_trimmed <- df %>%
   ) %>% 
   select(rotadate, night1, time_night) %>% 
   mutate(n1 = fct_anon(night1))
-
-
-# Anonymise the people who did nights by giving username a number.
-
-df_anon <- df_trimmed %>% 
-  select(-night1)
-
-View(df_anon)
-View(df_trimmed)
 
 
 # Group by consultant then count the total number of nights, the proportion filled in, and the average time of those completed
@@ -62,21 +56,81 @@ df_grp <-  df_trimmed %>% group_by(night1) %>%
   mutate(hrs = as.integer(avg_time) / (60*60)) %>% 
   arrange(desc(hrs))
 
-View(df_grp)
 
 ```
 
-Next to do
- - Visualise by hours recorded
- - Do something with return rate
+
+
+
+```{r get-dates}
+
+startdate <- format(min(df_trimmed$rotadate), format = '%d-%m-%Y')
+enddate <- format(max(df_trimmed$rotadate), format = '%d-%m-%Y')
+
+
+
+
+```
+
+
+## Hours Summary
+
+These are the averaged consultant on-call hours between `startdate` and `enddate`.
+
+
+
+```{r tabular-results}
+
+df_nice <- df_grp %>% 
+  mutate(Completion = response_rate * 100,
+         Hours = round(hrs, 1),) %>% 
+  rename(Consultant = night1,
+         Nights = night_count) %>% 
+  select(-response_rate, -avg_time, -hrs)
+
+kable(df_nice)
+
+```
+
+
+
 
 ```{r visualise-hours}
 
-df_grp %>% ggplot() +
-  geom_bar(aes(x=night1, y=hrs), stat="identity") +
-  geom_hline(yintercept = mean(df_grp$hrs, na.rm = TRUE))
+# Plot on the data on one chart with different geoms
+#   - Bar chart for the values for each user
+#   - Horizontal line for the mean
+#   - Scatter for the percentage return rate of each consultant
+
+
+p_labelled <- df_grp %>% ggplot(aes(x=reorder(night1, hrs))) +
+  geom_bar(aes(y=hrs), stat="identity", fill="light blue") +
+  geom_hline(yintercept = mean(df_grp$hrs, na.rm = TRUE)) +
+  geom_point(aes(y=response_rate*10), color="dark blue", size = 4) +
+  theme_light() +
+  scale_y_continuous(
+    breaks = c(2,4,6,8,10,12),
+    
+    # Second Axis
+    sec.axis = sec_axis(~.* 0.1,
+                        name = "Response Rate",
+                        labels = scales::percent,
+                        breaks = c(0.2, 0.4, 0.6, 0.8, 1))
+    
+    ) +
+  ylab("Average Hours") +
+  xlab("Consultant") +
+  ggtitle("On-call Hours - September 21 - February 22")
   
 
-mean(df_grp$hrs, na.rm = TRUE)
+p_anon <- p_labelled + scale_x_discrete(labels = NULL)
+
+
+# Export the chart
+ggsave("on-call_hours.jpg", path = here("images/"), plot = p_anon)
+
+
+p_labelled
+
 ```
 
