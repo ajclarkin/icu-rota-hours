@@ -1,12 +1,18 @@
 ---
 title: "On-call Hours in ICU"
 author: "AJ Clarkin"
-date: "08/02/2022"
-output: html_document
+date: "11/02/2022"
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
 ```
 
 
@@ -36,7 +42,6 @@ df <- read_csv(here("data_raw/sept21_feb22.csv"), na=c("\\0"))
 ```{r}
 # summary(df)
 
-View(df)
 
 df_trimmed <- df %>% 
   mutate(
@@ -48,7 +53,7 @@ df_trimmed <- df %>%
 
 # Group by consultant then count the total number of nights, the proportion filled in, and the average time of those completed
 
-df_grp <-  df_trimmed %>% group_by(night1) %>% 
+df_grp <-  df_trimmed %>% group_by(night1, n1) %>% 
   summarise(night_count = n(),
             response_rate = sum(!is.na(time_night)) / n(),
             avg_time = mean(time_night, na.rm = TRUE)
@@ -75,22 +80,7 @@ enddate <- format(max(df_trimmed$rotadate), format = '%d-%m-%Y')
 
 ## Hours Summary
 
-These are the averaged consultant on-call hours between `startdate` and `enddate`.
-
-
-
-```{r tabular-results}
-
-df_nice <- df_grp %>% 
-  mutate(Completion = response_rate * 100,
-         Hours = round(hrs, 1),) %>% 
-  rename(Consultant = night1,
-         Nights = night_count) %>% 
-  select(-response_rate, -avg_time, -hrs)
-
-kable(df_nice)
-
-```
+These are the averaged consultant on-call hours between `r startdate` and `r enddate`.
 
 
 
@@ -106,31 +96,82 @@ kable(df_nice)
 p_labelled <- df_grp %>% ggplot(aes(x=reorder(night1, hrs))) +
   geom_bar(aes(y=hrs), stat="identity", fill="light blue") +
   geom_hline(yintercept = mean(df_grp$hrs, na.rm = TRUE)) +
-  geom_point(aes(y=response_rate*10), color="dark blue", size = 4) +
   theme_light() +
-  scale_y_continuous(
-    breaks = c(2,4,6,8,10,12),
-    
-    # Second Axis
-    sec.axis = sec_axis(~.* 0.1,
-                        name = "Response Rate",
-                        labels = scales::percent,
-                        breaks = c(0.2, 0.4, 0.6, 0.8, 1))
-    
-    ) +
+  scale_y_continuous(breaks = c(2,4,6,8,10,12)) +
   ylab("Average Hours") +
   xlab("Consultant") +
-  ggtitle("On-call Hours - September 21 - February 22")
+  ggtitle(str_c("On-call Hours: ", startdate, " to ", enddate))
   
 
-p_anon <- p_labelled + scale_x_discrete(labels = NULL)
+p_labelled
+
+
+
+# New anonymous but using the consultant number
+p_anon <- df_grp %>% ggplot(aes(x=reorder(n1, hrs))) +
+  geom_bar(aes(y=hrs), stat="identity", fill="light blue") +
+  geom_hline(yintercept = mean(df_grp$hrs, na.rm = TRUE)) +
+  theme_light() +
+  scale_y_continuous(breaks = c(2,4,6,8,10,12)) +
+  ylab("Average Hours") +
+  xlab("Consultant") +
+  ggtitle(str_c("On-call Hours: ", startdate, " to ", enddate))
+  
+
+# p_anon
 
 
 # Export the chart
 ggsave("on-call_hours.jpg", path = here("images/"), plot = p_anon)
 
+```
 
-p_labelled
+```{r demo-secondary-axis}
+
+# If we wanted to include points with the percentage completion we could do the following
+# Needs sec-axis() and it's not immediately clear which axis relates to which chart
+
+# The points are being generated using geom_point()
+
+
+# p_combined <- df_grp %>% ggplot(aes(x=reorder(night1, hrs))) +
+#   geom_bar(aes(y=hrs), stat="identity", fill="light blue") +
+#   geom_hline(yintercept = mean(df_grp$hrs, na.rm = TRUE)) +
+#   geom_point(aes(y=response_rate*10), color="dark blue", size = 4) +
+#   theme_light() +
+#   scale_y_continuous(
+#     breaks = c(2,4,6,8,10,12),
+#     
+#     # Second Axis
+#     sec.axis = sec_axis(~.* 0.1,
+#                         name = "Response Rate",
+#                         labels = scales::percent,
+#                         breaks = c(0.2, 0.4, 0.6, 0.8, 1))
+#     
+#     ) +
+#   ylab("Average Hours") +
+#   xlab("Consultant") +
+#   ggtitle("On-call Hours - September 21 - February 22")
+#   
+# p_combined
 
 ```
+
+
+
+
+```{r tabular-results}
+
+df_nice <- df_grp %>%
+  mutate(Completion = response_rate * 100,
+         Hours = round(hrs, 1),) %>%
+  rename(Consultant = night1,
+         Nights = night_count,
+         Consultant_No = n1) %>%
+  select(-response_rate, -avg_time, -hrs)
+
+kable(df_nice)
+
+```
+
 
