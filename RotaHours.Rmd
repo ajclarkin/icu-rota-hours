@@ -30,9 +30,13 @@ library(knitr)
 
 ```{r file-imports}
 
+# To use this you need a CSV from the database. This will select the columns required.
+# This will summarise the whole extract and use the earliest and latest dates as headers.
+
+
 # note the squiffy null value
 
-df <- read_csv(here("data_raw/sept21_feb22.csv"), na=c("\\0"))
+df <- read_csv(here("data_raw/aug20-aug21.csv"), na=c("\\0"))
 # glimpse(df)
 
 ```
@@ -122,7 +126,8 @@ p_anon <- df_grp %>% ggplot(aes(x=reorder(n1, hrs))) +
 
 
 # Export the chart
-ggsave("on-call_hours.jpg", path = here("images/"), plot = p_anon)
+img_filename <- str_c("on-call_hours_", startdate, "_", enddate, ".jpg")
+ggsave(img_filename, path = here("images/"), plot = p_anon)
 
 ```
 
