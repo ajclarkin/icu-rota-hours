@@ -36,7 +36,7 @@ library(knitr)
 
 # note the squiffy null value
 
-df <- read_csv(here("data_raw/aug20-aug21.csv"), na=c("\\0"))
+df <- read_csv(here("data_raw/feb22-aug22.csv"), na=c("\\0", "\\N"))
 # glimpse(df)
 
 ```
@@ -123,6 +123,7 @@ p_anon <- df_grp %>% ggplot(aes(x=reorder(n1, hrs))) +
   
 
 # p_anon
+
 
 
 # Export the chart
