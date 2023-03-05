@@ -1,10 +1,10 @@
 ---
 title: "On-call Hours in ICU"
 author: "AJ Clarkin"
-date: "11/02/2022"
+date: "`r format(Sys.Date(), '%d/%m/%Y')`"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -36,7 +36,7 @@ library(knitr)
 
 # note the squiffy null value
 
-df <- read_csv(here("data_raw/feb22-aug22.csv"), na=c("\\0", "\\N"))
+df <- read_csv(here("data_raw/aug22-feb23.csv"), na=c("\\0", "\\N"))
 # glimpse(df)
 
 ```
